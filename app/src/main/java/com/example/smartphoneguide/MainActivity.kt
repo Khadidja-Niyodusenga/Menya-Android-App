@@ -140,59 +140,210 @@ fun ChatScreen() {
 var currentState = ""
 var currentSection: String? = null  // e.g., "whatsapp" or "email"
 var currentStep = 1
- fun generateResponse(input: String): String {
+// fun generateResponse(input: String): String {
+//    val message = input.lowercase().trim()
+//    return when {
+//        // User enters WhatsApp topic
+//        message.contains("watsap", ignoreCase = true) || message.contains(
+//            "watsapu",
+//            ignoreCase = true
+//        ) || message.contains("wasapu", ignoreCase = true) || message.contains(
+//            "wasap",
+//            ignoreCase = true
+//        ) || message.contains("whatsapp", ignoreCase = true) || message.contains(
+//            "WhatsApp",
+//            ignoreCase = true
+//        ) -> {
+//            currentState = "whatsapp"
+//            whatsappMenu()
+//        }
+//
+//        message == "c" && currentState == "whatsapp" -> {
+//            currentStep = 1   // start at first guide
+//            whatsappOptionC(currentStep)
+//        }
+//
+//
+//        message.contains("komeza") -> {
+//            if (currentState== "whatsapp"){
+//            if (currentStep < 3) {
+//                currentStep++
+//                whatsappOptionC(currentStep)
+//            } else {
+//                "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri WhatsApp!"
+//            }}
+//            else if (currentState== "email") {
+//                if (currentStep < 3) {
+//                    currentStep++
+//                    emailOptionC(currentStep)
+//                } else {
+//                    "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Email!"
+//                }}
+//
+//            else if (currentState== "settings") {
+//                if (currentStep < 8) {
+//                    currentStep++
+//                    settingsGuide(currentStep)
+//                } else {
+//                    "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Settings!"
+//                }
+//            }
+//            else {
+//                    "Banza uhitemo serivisi ushaka gufashwamo (urugero:WhatsApp, email,setting,..)"
+//                }
+//        }
+//
+//        currentState == "whatsapp" -> {
+//            when {
+//                message.contains("messages") || message.contains("ubutumwa") -> {
+//                    currentStep = 1
+//                    whatsappOptionC(currentStep)
+//                }
+//                message.contains("amafoto") || message.contains("videwo") ||
+//                        message.contains("document") || message.contains("inyandiko") -> {
+//                    currentStep = 2
+//                    whatsappOptionC(currentStep)
+//                }
+//                message.contains("voice") || message.contains("ijwi") ||
+//                        message.contains("microphone") -> {
+//                    currentStep = 2 // voice note is inside step 2
+//                    whatsappOptionC(currentStep)
+//                }
+//                message.contains("calls") || message.contains("guhamagara") -> {
+//                    currentStep = 3
+//                    whatsappOptionC(currentStep)
+//                }
+//                message.contains("status") -> {
+//                    currentStep = 3 // status is in step 3
+//                    whatsappOptionC(currentStep)
+//                }
+//                message.contains("group") || message.contains("itsinda") -> {
+//                    currentStep = 3 // groups also inside step 3
+//                    whatsappOptionC(currentStep)
+//                }
+//                message.contains("komeza") -> {
+//                    currentStep++
+//                    whatsappOptionC(currentStep)
+//                }
+//                else -> "Sinkumva neza. Andika 'messages', 'photo', 'voice', 'calls', 'status', 'group' cyangwa ukoreshe 'komeza'."
+//            }
+//        }
+//
+//
+//
+//
+//        currentState == "settings" -> {
+//            when {
+//                message.contains("security") || message.contains("sekirite") ||
+//                        message.contains("securite") || message.contains("umutekano") -> {
+//                    currentStep = 6
+//                    settingsGuide(currentStep)
+//                }
+//                message.contains("bluetooth") || message.contains("bulutufu") -> {
+//                    currentStep = 3
+//                    settingsGuide(currentStep)
+//                }
+//                message.contains("wifi") || message.contains("wi-fi") -> {
+//                    currentStep = 2
+//                    settingsGuide(currentStep)
+//                }
+//                message.contains("display") || message.contains("ecran") ||
+//                        message.contains("urumuri") -> {
+//                    currentStep = 4
+//                    settingsGuide(currentStep)
+//                }
+//                message.contains("sound") || message.contains("amajwi") ||
+//                        message.contains("ringtone") || message.contains("sonori") || message.contains("sone") || message.contains("soneri")-> {
+//                    currentStep = 5
+//                    settingsGuide(currentStep)
+//                }
+//                message.contains("apps") || message.contains("porogaramu") ||
+//                        message.contains("storage") || message.contains("ububiko") ||
+//                        message.contains("battery") || message.contains("bateri") ||
+//                        message.contains("update") || message.contains("vugurura") -> {
+//                    currentStep = 7
+//                    settingsGuide(currentStep)
+//                }
+//                else -> "sinkumva neza. Andika 'wifi', 'bluetooth', 'security' cyangwa ukoreshe 'komeza'."
+//            }
+//        }
+//        // User enters Email topic
+//  message.contains("email") || input.contains("gmail") || input.contains("imeyili") || input.contains("imeyiri") || input.contains("imeri") || input.contains("Gmail") || input.contains("imeli")-> {
+//        currentState = "email"
+//           emailMenu()
+//       }
+//
+//        message.contains("setingi") || input.contains("igenamiterere")   -> {
+//            currentState = "settings"
+//            settingsGuide()
+//        }
+//
+//        // If user chooses A, B, or C, respond based on current state
+//        input == "a" -> handleOptionA()
+//        input == "b" -> handleOptionB()
+//        input == "c" -> handleOptionC()
+//
+//        else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitemo igisubizo gihari, uhitamo imwe munyuguti zagaragajwe hejuru"
+//    }
+// }
+
+// Ahantu hagenzura ibisubizo byose
+fun generateResponse(input: String): String {
     val message = input.lowercase().trim()
     return when {
-        // User enters WhatsApp topic
-        message.contains("watsap", ignoreCase = true) || message.contains(
-            "watsapu",
-            ignoreCase = true
-        ) || message.contains("wasapu", ignoreCase = true) || message.contains(
-            "wasap",
-            ignoreCase = true
-        ) || message.contains("whatsapp", ignoreCase = true) || message.contains(
-            "WhatsApp",
-            ignoreCase = true
-        ) -> {
+        // WhatsApp topic
+        message.contains("watsap", ignoreCase = true) || message.contains("watsapu", ignoreCase = true) ||
+                message.contains("wasapu", ignoreCase = true) || message.contains("wasap", ignoreCase = true) ||
+                message.contains("whatsapp", ignoreCase = true) -> {
             currentState = "whatsapp"
             whatsappMenu()
         }
 
+        // Option A - Install WhatsApp
+        message == "a" && currentState == "whatsapp" -> {
+            whatsappOptionA()
+        }
+
+        // Option B - Register WhatsApp
+        message == "b" && currentState == "whatsapp" -> {
+            whatsappOptionB()
+        }
+
+        // Option C - How to use WhatsApp (start from step 1)
         message == "c" && currentState == "whatsapp" -> {
-            currentStep = 1   // start at first guide
+            currentStep = 1
             whatsappOptionC(currentStep)
         }
 
-
+        // Continue with next step
         message.contains("komeza") -> {
-            if (currentState== "whatsapp"){
-            if (currentStep < 3) {
-                currentStep++
-                whatsappOptionC(currentStep)
-            } else {
-                "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri WhatsApp!"
-            }}
-            else if (currentState== "email") {
+            if (currentState == "whatsapp") {
+                if (currentStep < 3) {
+                    currentStep++
+                    whatsappOptionC(currentStep)
+                } else {
+                    "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri WhatsApp!"
+                }
+            } else if (currentState == "email") {
                 if (currentStep < 3) {
                     currentStep++
                     emailOptionC(currentStep)
                 } else {
                     "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Email!"
-                }}
-
-            else if (currentState== "settings") {
+                }
+            } else if (currentState == "settings") {
                 if (currentStep < 8) {
                     currentStep++
                     settingsGuide(currentStep)
                 } else {
                     "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Settings!"
                 }
+            } else {
+                "Banza uhitemo serivisi ushaka gufashwamo (urugero: WhatsApp, Email, Settings...)"
             }
-            else {
-                    "Banza uhitemo serivisi ushaka gufashwamo (urugero:WhatsApp, email,setting,..)"
-                }
         }
 
+        // Direct access while still in WhatsApp section (old logic)
         currentState == "whatsapp" -> {
             when {
                 message.contains("messages") || message.contains("ubutumwa") -> {
@@ -206,86 +357,37 @@ var currentStep = 1
                 }
                 message.contains("voice") || message.contains("ijwi") ||
                         message.contains("microphone") -> {
-                    currentStep = 2 // voice note is inside step 2
+                    currentStep = 2
                     whatsappOptionC(currentStep)
                 }
                 message.contains("calls") || message.contains("guhamagara") -> {
                     currentStep = 3
                     whatsappOptionC(currentStep)
                 }
-                message.contains("status") -> {
-                    currentStep = 3 // status is in step 3
-                    whatsappOptionC(currentStep)
-                }
-                message.contains("group") || message.contains("itsinda") -> {
-                    currentStep = 3 // groups also inside step 3
-                    whatsappOptionC(currentStep)
-                }
-                message.contains("komeza") -> {
-                    currentStep++
-                    whatsappOptionC(currentStep)
-                }
-                else -> "Sinkumva neza. Andika 'messages', 'photo', 'voice', 'calls', 'status', 'group' cyangwa ukoreshe 'komeza'."
-            }
-        }
-
-
-
-
-        currentState == "settings" -> {
-            when {
-                message.contains("security") || message.contains("sekirite") ||
-                        message.contains("securite") || message.contains("umutekano") -> {
-                    currentStep = 6
-                    settingsGuide(currentStep)
-                }
-                message.contains("bluetooth") || message.contains("bulutufu") -> {
+                message.contains("status") || message.contains("group") -> {
                     currentStep = 3
-                    settingsGuide(currentStep)
+                    whatsappOptionC(currentStep)
                 }
-                message.contains("wifi") || message.contains("wi-fi") -> {
-                    currentStep = 2
-                    settingsGuide(currentStep)
-                }
-                message.contains("display") || message.contains("ecran") ||
-                        message.contains("urumuri") -> {
-                    currentStep = 4
-                    settingsGuide(currentStep)
-                }
-                message.contains("sound") || message.contains("amajwi") ||
-                        message.contains("ringtone") || message.contains("sonori") || message.contains("sone") || message.contains("soneri")-> {
-                    currentStep = 5
-                    settingsGuide(currentStep)
-                }
-                message.contains("apps") || message.contains("porogaramu") ||
-                        message.contains("storage") || message.contains("ububiko") ||
-                        message.contains("battery") || message.contains("bateri") ||
-                        message.contains("update") || message.contains("vugurura") -> {
-                    currentStep = 7
-                    settingsGuide(currentStep)
-                }
-                else -> "sinkumva neza. Andika 'wifi', 'bluetooth', 'security' cyangwa ukoreshe 'komeza'."
+                else -> "Sinkumva neza. Andika 'a', 'b', cyangwa 'c'. Cyangwa ukoreshe amagambo nka 'messages', 'photo', 'voice', 'calls', 'status', 'group'."
             }
         }
-        // User enters Email topic
-  message.contains("email") || input.contains("gmail") || input.contains("imeyili") || input.contains("imeyiri") || input.contains("imeri") || input.contains("Gmail") || input.contains("imeli")-> {
-        currentState = "email"
-           emailMenu()
-       }
 
-        message.contains("setingi") || input.contains("igenamiterere")   -> {
+        // Email and settings logic ibindi byose...
+        message.contains("email") || message.contains("gmail") || message.contains("imeyili") -> {
+            currentState = "email"
+            emailMenu()
+        }
+
+        message.contains("setingi") || message.contains("igenamiterere") -> {
             currentState = "settings"
             settingsGuide()
         }
 
-        // If user chooses A, B, or C, respond based on current state
-        input == "a" -> handleOptionA()
-        input == "b" -> handleOptionB()
-        input == "c" -> handleOptionC()
-
-        else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitemo igisubizo gihari, uhitamo imwe munyuguti zagaragajwe hejuru"
+        else -> "Sinkumva neza. Andika ijambo risobanutse cyangwa uhitamo imwe mu nyuguti zagaragajwe hejuru."
     }
- }
+}
+
+
  fun whatsappMenu(): String {
         return "Ukeneye ubufasha kuri WhatsApp. Hitamo: inyuguti y'ubufasha ukeneye muri izi zikurikira\n" +
                 "A: Gushyiraho WhatsApp\n" +
