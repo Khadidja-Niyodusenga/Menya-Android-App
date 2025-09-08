@@ -1,5 +1,4 @@
 package com.example.smartphoneguide
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,15 +13,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
-
 //import com.example.smartphoneguide.ui.theme.SmartphoneGuideTheme
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-
-import android.os.Build                // <-- this import is required
+import android.os.Build
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,11 +35,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-
 }
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,9 +89,12 @@ fun ChatScreen() {
                 Button(
                     onClick = {
                         if (currentMessage.isNotBlank()) {
-                            messages.add(0, "Wowe: $currentMessage")
+//                            messages.add(0, "Wowe: $currentMessage")
+//                            val response = generateResponse(currentMessage)
+//                            messages.add(0, "Ubufasha: $response")
+                            messages.add("Wowe: $currentMessage")   // show user message first
                             val response = generateResponse(currentMessage)
-                            messages.add(0, "Ubufasha: $response")
+                            messages.add("Ubufasha: $response")
                             currentMessage = ""
 
                             coroutineScope.launch {
@@ -105,6 +102,7 @@ fun ChatScreen() {
                             }
                         }
                     },
+
                             colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF004225),  // background color
                     contentColor = Color.White     // text color
@@ -113,11 +111,30 @@ fun ChatScreen() {
                     Text("Ohereza")
                 }
             }
+        },
+
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    coroutineScope.launch {
+                        listState.scrollToItem(0) // 🔹 Jump to the top (first message)
+                    }
+                },
+                containerColor = Color(0xFF004225),
+                contentColor = Color.White,
+                shape = CircleShape
+            ) {
+                Text("⬆️") // Or use Icon(Icons.Default.ArrowUpward, contentDescription = "Back to Top")
+            }
         }
+
+
+
+
     ) { innerPadding ->
         LazyColumn(
             state = listState,
-            reverseLayout = true, // kugira ngo ubutumwa bushya buze hasi
+            reverseLayout = false, // kugira ngo ubutumwa bushya buze hasi
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
@@ -133,181 +150,42 @@ fun ChatScreen() {
         }
     }
 }
-
-
-
-
 var currentState = ""
-var currentSection: String? = null  // e.g., "whatsapp" or "email"
+var currentSection: String? = null
 var currentStep = 1
-// fun generateResponse(input: String): String {
-//    val message = input.lowercase().trim()
-//    return when {
-//        // User enters WhatsApp topic
-//        message.contains("watsap", ignoreCase = true) || message.contains(
-//            "watsapu",
-//            ignoreCase = true
-//        ) || message.contains("wasapu", ignoreCase = true) || message.contains(
-//            "wasap",
-//            ignoreCase = true
-//        ) || message.contains("whatsapp", ignoreCase = true) || message.contains(
-//            "WhatsApp",
-//            ignoreCase = true
-//        ) -> {
-//            currentState = "whatsapp"
-//            whatsappMenu()
-//        }
-//
-//        message == "c" && currentState == "whatsapp" -> {
-//            currentStep = 1   // start at first guide
-//            whatsappOptionC(currentStep)
-//        }
-//
-//
-//        message.contains("komeza") -> {
-//            if (currentState== "whatsapp"){
-//            if (currentStep < 3) {
-//                currentStep++
-//                whatsappOptionC(currentStep)
-//            } else {
-//                "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri WhatsApp!"
-//            }}
-//            else if (currentState== "email") {
-//                if (currentStep < 3) {
-//                    currentStep++
-//                    emailOptionC(currentStep)
-//                } else {
-//                    "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Email!"
-//                }}
-//
-//            else if (currentState== "settings") {
-//                if (currentStep < 8) {
-//                    currentStep++
-//                    settingsGuide(currentStep)
-//                } else {
-//                    "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Settings!"
-//                }
-//            }
-//            else {
-//                    "Banza uhitemo serivisi ushaka gufashwamo (urugero:WhatsApp, email,setting,..)"
-//                }
-//        }
-//
-//        currentState == "whatsapp" -> {
-//            when {
-//                message.contains("messages") || message.contains("ubutumwa") -> {
-//                    currentStep = 1
-//                    whatsappOptionC(currentStep)
-//                }
-//                message.contains("amafoto") || message.contains("videwo") ||
-//                        message.contains("document") || message.contains("inyandiko") -> {
-//                    currentStep = 2
-//                    whatsappOptionC(currentStep)
-//                }
-//                message.contains("voice") || message.contains("ijwi") ||
-//                        message.contains("microphone") -> {
-//                    currentStep = 2 // voice note is inside step 2
-//                    whatsappOptionC(currentStep)
-//                }
-//                message.contains("calls") || message.contains("guhamagara") -> {
-//                    currentStep = 3
-//                    whatsappOptionC(currentStep)
-//                }
-//                message.contains("status") -> {
-//                    currentStep = 3 // status is in step 3
-//                    whatsappOptionC(currentStep)
-//                }
-//                message.contains("group") || message.contains("itsinda") -> {
-//                    currentStep = 3 // groups also inside step 3
-//                    whatsappOptionC(currentStep)
-//                }
-//                message.contains("komeza") -> {
-//                    currentStep++
-//                    whatsappOptionC(currentStep)
-//                }
-//                else -> "Sinkumva neza. Andika 'messages', 'photo', 'voice', 'calls', 'status', 'group' cyangwa ukoreshe 'komeza'."
-//            }
-//        }
-//
-//
-//
-//
-//        currentState == "settings" -> {
-//            when {
-//                message.contains("security") || message.contains("sekirite") ||
-//                        message.contains("securite") || message.contains("umutekano") -> {
-//                    currentStep = 6
-//                    settingsGuide(currentStep)
-//                }
-//                message.contains("bluetooth") || message.contains("bulutufu") -> {
-//                    currentStep = 3
-//                    settingsGuide(currentStep)
-//                }
-//                message.contains("wifi") || message.contains("wi-fi") -> {
-//                    currentStep = 2
-//                    settingsGuide(currentStep)
-//                }
-//                message.contains("display") || message.contains("ecran") ||
-//                        message.contains("urumuri") -> {
-//                    currentStep = 4
-//                    settingsGuide(currentStep)
-//                }
-//                message.contains("sound") || message.contains("amajwi") ||
-//                        message.contains("ringtone") || message.contains("sonori") || message.contains("sone") || message.contains("soneri")-> {
-//                    currentStep = 5
-//                    settingsGuide(currentStep)
-//                }
-//                message.contains("apps") || message.contains("porogaramu") ||
-//                        message.contains("storage") || message.contains("ububiko") ||
-//                        message.contains("battery") || message.contains("bateri") ||
-//                        message.contains("update") || message.contains("vugurura") -> {
-//                    currentStep = 7
-//                    settingsGuide(currentStep)
-//                }
-//                else -> "sinkumva neza. Andika 'wifi', 'bluetooth', 'security' cyangwa ukoreshe 'komeza'."
-//            }
-//        }
-//        // User enters Email topic
-//  message.contains("email") || input.contains("gmail") || input.contains("imeyili") || input.contains("imeyiri") || input.contains("imeri") || input.contains("Gmail") || input.contains("imeli")-> {
-//        currentState = "email"
-//           emailMenu()
-//       }
-//
-//        message.contains("setingi") || input.contains("igenamiterere")   -> {
-//            currentState = "settings"
-//            settingsGuide()
-//        }
-//
-//        // If user chooses A, B, or C, respond based on current state
-//        input == "a" -> handleOptionA()
-//        input == "b" -> handleOptionB()
-//        input == "c" -> handleOptionC()
-//
-//        else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitemo igisubizo gihari, uhitamo imwe munyuguti zagaragajwe hejuru"
-//    }
-// }
 
-// Ahantu hagenzura ibisubizo byose
 fun generateResponse(input: String): String {
     val message = input.lowercase().trim()
     return when {
-        // WhatsApp topic
-        message.contains("watsap", ignoreCase = true) || message.contains("watsapu", ignoreCase = true) ||
-                message.contains("wasapu", ignoreCase = true) || message.contains("wasap", ignoreCase = true) ||
-                message.contains("whatsapp", ignoreCase = true) -> {
+        // 🔹 Global topics first (always allow user to switch)
+        message.contains("watsap") || message.contains("watsapu") ||
+                message.contains("wasapu") || message.contains("wasap") ||
+                message.contains("whatsapp") -> {
             currentState = "whatsapp"
+            currentStep = 0
             whatsappMenu()
         }
 
-        // Option A - Install WhatsApp
-        message == "a" && currentState == "whatsapp" -> {
-            whatsappOptionA()
+    message.contains("email") || message.contains("gmail") ||
+                message.contains("imeyili") || message.contains("imeli") ||
+                message.contains("imeri") -> {
+            currentState = "email"
+            currentStep = 0
+            emailMenu()
         }
 
-        // Option B - Register WhatsApp
-        message == "b" && currentState == "whatsapp" -> {
-            whatsappOptionB()
+        message.contains("setingi") || message.contains("igenamiterere") ||
+                message.contains("setting") || message.contains("settingi") -> {
+            currentState = "settings"
+            currentStep = 0
+            settingsGuide()
         }
+
+        // Option A - Install WhatsApp
+        message == "a" && currentState == "whatsapp" -> whatsappOptionA()
+
+        // Option B - Register WhatsApp
+        message == "b" && currentState == "whatsapp" -> whatsappOptionB()
 
         // Option C - How to use WhatsApp (start from step 1)
         message == "c" && currentState == "whatsapp" -> {
@@ -315,7 +193,15 @@ fun generateResponse(input: String): String {
             whatsappOptionC(currentStep)
         }
 
-        // Continue with next step
+        // ✅ Email options
+        message == "a" && currentState == "email" -> emailOptionA()
+        message == "b" && currentState == "email" -> emailOptionB()
+        message == "c" && currentState == "email" -> {
+            currentStep = 1
+            emailOptionC(currentStep)
+        }
+
+        // komeza to follow step by step method
         message.contains("komeza") -> {
             if (currentState == "whatsapp") {
                 if (currentStep < 3) {
@@ -343,10 +229,10 @@ fun generateResponse(input: String): String {
             }
         }
 
-        // Direct access while still in WhatsApp section (old logic)
+        // Direct access while still in WhatsApp section
         currentState == "whatsapp" -> {
             when {
-                message.contains("messages") || message.contains("ubutumwa") -> {
+                message.contains("ubutumwa") -> {
                     currentStep = 1
                     whatsappOptionC(currentStep)
                 }
@@ -355,48 +241,70 @@ fun generateResponse(input: String): String {
                     currentStep = 2
                     whatsappOptionC(currentStep)
                 }
-                message.contains("voice") || message.contains("ijwi") ||
-                        message.contains("microphone") -> {
+                message.contains("ijwi") || message.contains("microphone") || message.contains("amajwi") -> {
                     currentStep = 2
                     whatsappOptionC(currentStep)
                 }
-                message.contains("calls") || message.contains("guhamagara") -> {
+                message.contains("guhamagara") || message.contains("hamagara") -> {
                     currentStep = 3
                     whatsappOptionC(currentStep)
                 }
-                message.contains("status") || message.contains("group") -> {
+                message.contains("gurupe") || message.contains("sitati") || message.contains("sitatasi") -> {
                     currentStep = 3
                     whatsappOptionC(currentStep)
                 }
-                else -> "Sinkumva neza. Andika 'a', 'b', cyangwa 'c'. Cyangwa ukoreshe amagambo nka 'messages', 'photo', 'voice', 'calls', 'status', 'group'."
+                else -> "Sinkumva neza. Andika 'a', 'b', cyangwa 'c'. Cyangwa amagambo nka 'ubutumwa', 'amafoto', 'amajwi', 'guhamagara', 'sitatasi', 'gurupe'."
             }
         }
 
-        // Email and settings logic ibindi byose...
-        message.contains("email") || message.contains("gmail") || message.contains("imeyili") -> {
-            currentState = "email"
-            emailMenu()
+        currentState == "settings" -> {
+            when {
+                message.contains("wifi") -> {
+                    currentStep = 2
+                    settingsGuide(currentStep)
+                }
+                message.contains("bluetooth") || message.contains("bulutufu") -> {
+                    currentStep = 3
+                    settingsGuide(currentStep)
+                }
+                message.contains("screen") || message.contains("urumuri") -> {
+                    currentStep = 4
+                    settingsGuide(currentStep)
+                }
+                message.contains("amajwi") -> {
+                    currentStep = 5
+                    settingsGuide(currentStep)
+                }
+                message.contains("security") || message.contains("sekirite") || message.contains("umutekano") -> {
+                    currentStep = 6
+                    settingsGuide(currentStep)
+                }
+                message.contains("komeza") -> {
+                    if (currentStep < 8) {
+                        currentStep++
+                        settingsGuide(currentStep)
+                    } else {
+                        "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Settings!"
+                    }
+                }
+                else -> "Sinkumva neza. Andika 'Wi-Fi', 'Bluetooth', 'Display', 'Sound', 'Security' cyangwa 'komeza'."
+            }
         }
 
-        message.contains("setingi") || message.contains("igenamiterere") -> {
-            currentState = "settings"
-            settingsGuide()
-        }
-
-        else -> "Sinkumva neza. Andika ijambo risobanutse cyangwa uhitamo imwe mu nyuguti zagaragajwe hejuru."
+        else -> "Sinkumva neza. Andika WhatsApp, Email cyangwa Settings kugira ngo utangire."
     }
 }
 
 
  fun whatsappMenu(): String {
-        return "Ukeneye ubufasha kuri WhatsApp. Hitamo: inyuguti y'ubufasha ukeneye muri izi zikurikira\n" +
-                "A: Gushyiraho WhatsApp\n" +
+        return "Ukeneye ubufasha kuri watsapu(WhatsApp). Hitamo: inyuguti y'ubufasha ukeneye muri izi zikurikira\n" +
+                "A: Gushyiraho watsapu(WhatsApp)\n" +
                 "B: Kwiyandikisha kuri WhatsApp\n" +
                 "C: Uko WhatsApp ikoreshwa"
     }
 
     fun whatsappOptionA(): String {
-        return "Kugira ngo ushyire WhatsApp muri telefoni bwa mbere:\n" +
+        return "Kugira ngo ushyire watsapu(WhatsApp) muri telefoni bwa mbere:\n" +
                 "1.Jyamurutonde rwa porogaramu zawe \n" +
                 "2.Fungura iyanditseho\"Play Store\"  .\n" +
                 "3.kanda hasi ahanditse ijambo \"search\" urabona aho kwandika hejuru wandikemo ijambo \"WhatsApp\".\n" +
@@ -410,7 +318,7 @@ fun generateResponse(input: String): String {
     }
 
     fun whatsappOptionB(): String {
-        return "Kwiyandikisha kuri WhatsApp:\n" +
+        return "Kwiyandikisha kuri watsapu(WhatsApp):\n" +
                 "1.Emera amategeko ya WhatsApp (kanda ahanditse\"Agree and Continue\").\n" +
                 "2.Hitamo igihugu urugero:(Rwanda +250),Andika numero yawe ya telefoni ushaka gukoresha kuri WhatsApp (nka: 78xxxxxxx).\n" +
                 "3.Emeza ko ari yo (kanda OK).\n" +
@@ -423,7 +331,7 @@ fun whatsappOptionC(step: Int = 1): String {
     return when (step) {
         1 -> "Uko WhatsApp ikoreshwa :\n" +
                 "1. Kohereza ubutumwa (Messages):\n" +
-                "- Fungura WhatsApp\n" +
+                "- Fungura watsapu(WhatsApp)\n" +
                 "- Kanda ku + hasi iburyo urebe abantu ufiteho numero\n" +
                 "- Hitamo izina ry'umuntu ushaka kwandikira\n" +
                 "- Andika ubutumwa hanyuma ukande ku kimenyetso cy’icyatsi cyangwa umweru kugirango bwoherezwe\n\n" +
@@ -438,16 +346,16 @@ fun whatsappOptionC(step: Int = 1): String {
                 "- Fungura ikiganiro\n" +
                 "- Kanda kandi ufate ikimenyetso cya Microphone🎙️\n" +
                 "- Vuga ubutumwa bwawe, hanyuma urekure kugirango bwoherezwe\n\n" +
-                "Andika 'komeza' kugirango ukomeze ku gice cya nyuma"
+                "Andika 'komeza' kugirango ukomeze ku gice cya nyuma cyuburyo wakoreshamo watsapu"
 
         3 -> "Uko WhatsApp ikoreshwa:\n" +
                 "4. Guhamagara abantu:\n" +
-                "- Kanda Telephone 📞 cyangwa Camera🎥 mu kiganiro cya WhatsApp\n\n"+
+                "- Kanda Telephone 📞 cyangwa kamera🎥 mu kiganiro cya watsapu\n\n"+
                 "5. Gukoresha Status:\n" +
-                "- Kanda Status hejuru, uhitemo Camera📷 cyangwa Pencil✏️ kugirango ushyireho inkuru\n\n" +
+                "- Kanda Status hejuru, uhitemo kamera📷 cyangwa kereyo✏️ kugirango ushyireho inkuru\n\n" +
                 "6. Kureba no gusiba ubutumwa:\n" +
                 "- Kanda igihe gito ku butumwa ushaka gusiba\n" +
-                "- Hitamo 'Delete for me' cyangwa 'Delete for everyone'\n\n" +
+                "- Hitamo 'Delete for me' kugirango ubutumwa ubusibe muruganiriro rwawe  cyangwa 'Delete for everyone' ubusibe kumpande zombi,haba wowe nuwo waruhaye ubutumwa\n\n" +
                 "7. Kuganira mu itsinda:\n" +
                 "- Kanda ku + hasi iburyo, uhitemo 'New Group'\n" +
                 "- Hitamo abantu, shyiramo izina ry’itsinda hanyuma kanda ikimenyetso cy’icyatsi/umweru\n\n" +
@@ -497,14 +405,14 @@ fun emailOptionC(step: Int = 1): String {
 
         2 -> "Uko wohereza Email nshya:\n\n" +
                 "1. Fungura porogaramu ya **Gmail**.\n" +
-                "2. Kanda ku kimenyetso cya **Pencil (agakereyo)** cyangwa ahanditse **Compose** (hasi iburyo).\n" +
+                "2. Kanda ku kimenyetso cya **agakereyo✏️** cyangwa ahanditse **Compose** (hasi iburyo).\n" +
                 "3. Mu gasanduku ka **To**, andika Email y’uwo ushaka koherereza urugero: umuntu@gmail.com\n" +
                 "4. Ahanditse **Subject**, andika umutwe cyangwa impamvu y’iyo Email.\n\n" +
                 "Andika 'komeza' kugira ngo ubone uko urangiza ubutumwa bwawe no kubwohereza."
 
         3 -> "Uko urangiza kohereza Email:\n\n" +
                 "5. Mu gasanduku kanini hasi, andika ubutumwa bwawe.\n" +
-                "6. Niba ushaka kongeraho ifoto cyangwa inyandiko, kanda kuri **Clip / Attach**.\n" +
+                "6. Niba ushaka kongeraho ifoto cyangwa inyandiko, kanda kuri **Clip/Attach**📎.\n" +
                 "7. Ohereza Ukanda **Send** kugira ngo Email yawe igende.\n\n" +
                 "Ubu ushobora kohereza no kwakira mesagje za Email neza muri telefoni yawe!"
 
@@ -570,7 +478,7 @@ fun settingsGuide(step: Int = 1): String {
                 "2. Hitamo **Brightness** kugirango wongere cyangwa ugabanye urumuri.\n" +
                 "3. Ushobora no guhitamo **Dark Mode**(uburyo bw'ijimye) cyangwa **Light Mode**(uburyo bugaragara).\n" +
                 "4. Hari aho ushobora guhindura ingano y’inyuguti (Font Size).\n\n" +
-                "Andika 'komeza' kugira ngo ukomeze kuri Sound(Amamjwi)."
+                "Andika 'komeza' kugira ngo ukomeze kuri Sound(Amajwi)."
 
         // SOUND
         5 -> "🔹 Uko uhindura amajwi (Sound):\n" +
@@ -615,7 +523,7 @@ fun settingsGuide(step: Int = 1): String {
                 "- Niba ibonetse, kanda **Download and Install**.\n" +
                 "- Kuvugurura Android bituma telefoni ikora neza, ikagira umutekano mwinshi kandi ikabona uburyo bushya.\n\n" +
 
-                "✅ Noneho wamenye uburyo bwo gukoresha neza igenamiterere (Settings) mu buryo bwuzuye!"
+                "Noneho wamenye uburyo bwo gukoresha neza igenamiterere (Settings) mu buryo bwuzuye!"
 
         else -> "Andika 1 kugira ngo utangire kwiga ku bijyanye na Settings kuva ku ntangiriro."
     }
