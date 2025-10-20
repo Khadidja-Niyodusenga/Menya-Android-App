@@ -18,6 +18,14 @@ import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.launch
 import android.os.Build
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.draw.drawBehind
+
+import androidx.compose.ui.graphics.drawscope.DrawScope
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -46,10 +54,11 @@ fun ChatScreen() {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Menya Android App",
-                        color = Color.White,
-                        fontSize = 35.sp,
-                        fontWeight = FontWeight.Bold
+                        text = "Menya Android",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -61,7 +70,7 @@ fun ChatScreen() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
                     .imePadding(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -72,41 +81,38 @@ fun ChatScreen() {
                     placeholder = { Text(
                         "Andika ubutumwa...",
                         style = TextStyle(fontSize = 20.sp)
-                    ) }, textStyle = TextStyle(fontSize = 20.sp),
-
-                    colors = TextFieldDefaults.textFieldColors(
-                             // placeholder color
-                        containerColor = Color.LightGray,
+                    ) },
+                    textStyle = TextStyle(fontSize = 20.sp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.LightGray,
+                        unfocusedContainerColor = Color.LightGray,
                         focusedIndicatorColor = Color.Black,
                         unfocusedIndicatorColor = Color.Black
                     )
+
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
                         if (currentMessage.isNotBlank()) {
-
                             messages.add("Wowe: $currentMessage")
                             val response = generateResponse(currentMessage)
                             messages.add("Ubufasha: $response")
                             currentMessage = ""
-
                             coroutineScope.launch {
-                          listState.scrollToItem(messages.lastIndex)
+                                listState.scrollToItem(messages.lastIndex)
                             }
                         }
                     },
-
-                            colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF004225),
-                    contentColor = Color.White
-                )
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF004225),
+                        contentColor = Color.White
+                    )
                 ) {
                     Text("Ohereza")
                 }
             }
         },
-
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -121,10 +127,6 @@ fun ChatScreen() {
                 Text("⬆️")
             }
         }
-
-
-
-
     ) { innerPadding ->
         LazyColumn(
             state = listState,
@@ -132,13 +134,12 @@ fun ChatScreen() {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .padding(horizontal = 8.dp)
         ) {
             items(messages) { msg ->
-                Text(
-                    text = msg,
-                    fontSize = 23.sp,
-                    lineHeight = 45.sp,
-                    modifier = Modifier.padding(8.dp)
+                MessageBubble(
+                    message = msg,
+                    isUserMessage = msg.startsWith("Wowe:")
                 )
             }
         }
@@ -148,10 +149,70 @@ var currentState = ""
 var currentSection: String? = null
 var currentStep = 1
 
-fun generateResponse(input: String): String {
-    val message = input.lowercase().trim()
+@Composable
+fun MessageBubble(message: String, isUserMessage: Boolean) {
+    val backgroundColor = if (isUserMessage) Color(0xFFD0E8FF) else Color(0xFFE0E0E0)
+    val tailDirection = if (isUserMessage) 1f else -1f // Tail direction: right for user, left for app
 
-    // Direct access kuri whatsapp
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 8.dp),
+        horizontalArrangement = if (isUserMessage) Arrangement.End else Arrangement.Start
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(
+                    RoundedCornerShape(
+                        topStart = 16.dp,
+                        topEnd = if (isUserMessage) 0.dp else 16.dp,
+                        bottomStart = if (isUserMessage) 16.dp else 0.dp,
+                        bottomEnd = 16.dp
+                    )
+                )
+                .background(backgroundColor)
+                .drawBehind { drawTail(tailDirection) }
+                .padding(12.dp)
+        ) {
+            Text(
+                text = message.removePrefix(if (isUserMessage) "Wowe: " else "Ubufasha: "),
+                fontSize = 18.sp,
+                lineHeight = 24.sp,
+                color = Color.Black
+            )
+        }
+    }
+}
+
+
+private fun DrawScope.drawTail(direction: Float) {
+    val tailWidth = 10f
+    val tailHeight = 10f
+    val offsetX = if (direction > 0) size.width - tailWidth else 0f
+
+    val path = Path().apply {
+        moveTo(offsetX, size.height)
+        lineTo(offsetX + tailWidth * direction, size.height)
+        lineTo(offsetX + tailWidth * direction / 2, size.height + tailHeight)
+        close()
+    }
+    drawPath(path, color = Color.Black)
+}
+
+
+fun generateResponse(input: String): String {
+    val message = input.trim().lowercase()
+
+    // Handle A, B, C inputs when in WhatsApp or Email menu
+    if (currentState == "whatsapp" || currentState == "email") {
+        when (message) {
+            "a" -> return handleOptionA()
+            "b" -> return handleOptionB()
+            "c" -> return handleOptionC()
+        }
+    }
+
+    // Direct access for settings-related keywords
     if (message.contains("urumuri") || message.contains("screen") || message.contains("display")) {
         currentState = "settings"
         currentStep = 4
@@ -178,11 +239,11 @@ fun generateResponse(input: String): String {
         return settingsGuide(currentStep)
     }
 
-    // Direct access kuri whatsapp
+    // Direct access for WhatsApp-related keywords
     if (message.contains("whatsapp") || message.contains("watsap") ||
         message.contains("watsapu") || message.contains("wasapu") || message.contains("wasap")) {
-
-        // Direct access to typed words
+        currentState = "whatsapp"
+        currentStep = 0
         return when {
             message.contains("gushyiraho") || message.contains("install") -> whatsappOptionA()
             message.contains("kwiyandikisha") || message.contains("register") -> whatsappOptionB()
@@ -193,10 +254,11 @@ fun generateResponse(input: String): String {
         }
     }
 
-    // direct access to imeri
+    // Direct access for email-related keywords
     if (message.contains("email") || message.contains("gmail") ||
         message.contains("imeyili") || message.contains("imeli") || message.contains("imeri")) {
-
+        currentState = "email"
+        currentStep = 0
         return when {
             message.contains("gufungura") || message.contains("kwiyandikisha") || message.contains("create account") -> emailOptionA()
             message.contains("kwinjira") || message.contains("login") -> emailOptionB()
@@ -205,31 +267,28 @@ fun generateResponse(input: String): String {
         }
     }
 
-    // whole logic here
+    // Main logic for other inputs
     return when {
-        // setingi menu
+        // Settings menu
         message.contains("setingi") || message.contains("igenamiterere") ||
                 message.contains("setting") || message.contains("settingi") -> {
             currentState = "settings"
-            currentStep = 0
+            currentStep = 1
             settingsGuide()
         }
-
-        // menu ya whatsapp
+        // WhatsApp menu
         message == "whatsapp" -> {
             currentState = "whatsapp"
             currentStep = 0
             whatsappMenu()
         }
-
-        // ✅ Email main menu (if user just says Email)
+        // Email menu
         message == "email" -> {
             currentState = "email"
             currentStep = 0
             emailMenu()
         }
-
-        // komeza steps
+        // Continue steps
         message.contains("komeza") -> {
             when (currentState) {
                 "whatsapp" -> {
@@ -242,21 +301,149 @@ fun generateResponse(input: String): String {
                     if (currentStep < 3) {
                         currentStep++
                         emailOptionC(currentStep)
-                    } else "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Email!"
+                    } else "Ubwo nibwo buryo bw'ingenzi ukenede kumenya kuri Email!"
                 }
                 "settings" -> {
                     if (currentStep < 8) {
                         currentStep++
                         settingsGuide(currentStep)
-                    } else "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Settings!"
+                    } else "Ubwo nibwo buryo bw'ingenzi ukenede kumenya kuri Settings!"
                 }
                 else -> "Banza uhitemo serivisi ushaka gufashwamo (urugero: WhatsApp, Email, Settings...)"
             }
         }
-
         else -> "Sinkumva neza. Ushobora kubaza ibijyanye na WhatsApp, Email, cyangwa Settings."
     }
 }
+
+//fun generateResponse(input: String): String {
+//    val message = input.lowercase().trim()
+//
+//    // ✅ First: Handle A/B/C inputs if the user is in a menu
+//    if (currentState == "whatsapp" || currentState == "email") {
+//        return when (message.uppercase()) {
+//            "A" -> handleOptionA()
+//            "B" -> handleOptionB()
+//            "C" -> handleOptionC()
+//            else -> null // if not A/B/C, continue with normal checks
+//        } ?: "Sinkumva neza. Hitamo A, B cyangwa C."
+//    }
+//
+//    // Direct access kuri whatsapp
+//    if (message.contains("urumuri") || message.contains("screen") || message.contains("display")) {
+//        currentState = "settings"
+//        currentStep = 4
+//        return settingsGuide(currentStep)
+//    }
+//    if (message.contains("wifi")) {
+//        currentState = "settings"
+//        currentStep = 2
+//        return settingsGuide(currentStep)
+//    }
+//    if (message.contains("bluetooth") || message.contains("bulutufu")) {
+//        currentState = "settings"
+//        currentStep = 3
+//        return settingsGuide(currentStep)
+//    }
+//    if (message.contains("amajwi") || message.contains("sound")) {
+//        currentState = "settings"
+//        currentStep = 5
+//        return settingsGuide(currentStep)
+//    }
+//    if (message.contains("sekirite") || message.contains("umutekano") || message.contains("security")) {
+//        currentState = "settings"
+//        currentStep = 6
+//        return settingsGuide(currentStep)
+//    }
+//
+//    // Direct access kuri whatsapp
+//    if (message.contains("whatsapp") || message.contains("watsap") ||
+//        message.contains("watsapu") || message.contains("wasapu") || message.contains("wasap")) {
+//
+//        // Direct access to typed words
+//        return when {
+//            message.contains("gushyiraho") || message.contains("install") -> whatsappOptionA()
+//            message.contains("kwiyandikisha") || message.contains("register") -> whatsappOptionB()
+//            message.contains("ubutumwa") -> whatsappOptionC(1)
+//            message.contains("amafoto") || message.contains("videwo") || message.contains("inyandiko") -> whatsappOptionC(2)
+//            message.contains("guhamagara") || message.contains("gurupe") || message.contains("sitati") -> whatsappOptionC(3)
+//            else -> whatsappMenu()
+//        }
+//    }
+//
+//    // direct access to imeri
+//    if (message.contains("email") || message.contains("gmail") ||
+//        message.contains("imeyili") || message.contains("imeli") || message.contains("imeri")) {
+//
+//        return when {
+//            message.contains("gufungura") || message.contains("kwiyandikisha") || message.contains("create account") -> emailOptionA()
+//            message.contains("kwinjira") || message.contains("login") -> emailOptionB()
+//            message.contains("koherereza") || message.contains("email nshya") || message.contains("message") || message.contains("ubutumwa") -> emailOptionC(2)
+//            else -> emailMenu()
+//        }
+//    }
+//
+//    if (currentState == "whatsapp" || currentState == "email") {
+//        return when (message.uppercase()) {
+//            "A" -> handleOptionA()
+//            "B" -> handleOptionB()
+//            "C" -> handleOptionC()
+//            else -> "sinkumva neza. Hitamo A, B cyangwa C."
+//        }
+//    }
+//    // whole logic here
+//    return when {
+//        // setingi menu
+//        message.contains("setingi") || message.contains("igenamiterere") ||
+//                message.contains("setting") || message.contains("settingi") -> {
+//            currentState = "settings"
+//            currentStep = 0
+//            settingsGuide()
+//        }
+//
+//        // menu ya whatsapp
+//        message == "whatsapp" -> {
+//            currentState = "whatsapp"
+//            currentStep = 0
+//            whatsappMenu()
+//        }
+//
+//        // ✅ Email main menu (if user just says Email)
+//        message == "email" -> {
+//            currentState = "email"
+//            currentStep = 0
+//            emailMenu()
+//        }
+//
+//
+//        // komeza steps
+//        message.contains("komeza") -> {
+//            when (currentState) {
+//                "whatsapp" -> {
+//                    if (currentStep < 3) {
+//                        currentStep++
+//                        whatsappOptionC(currentStep)
+//                    } else "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri WhatsApp!"
+//                }
+//                "email" -> {
+//                    if (currentStep < 3) {
+//                        currentStep++
+//                        emailOptionC(currentStep)
+//                    } else "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Email!"
+//                }
+//                "settings" -> {
+//                    if (currentStep < 8) {
+//                        currentStep++
+//                        settingsGuide(currentStep)
+//                    } else "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Settings!"
+//                }
+//                else -> "Banza uhitemo serivisi ushaka gufashwamo (urugero: WhatsApp, Email, Settings...)"
+//            }
+//        }
+//        else -> "Sinkumva neza. Ushobora kubaza ibijyanye na Watsapu, imeri, cyangwa Settings."
+//    }
+//
+//}
  fun whatsappMenu(): String {
         return "Ukeneye ubufasha kuri watsapu(WhatsApp). Hitamo: inyuguti y'ubufasha ukeneye muri izi zikurikira\n" +
                 "A: Gushyiraho watsapu(WhatsApp)\n" +
@@ -399,7 +586,7 @@ fun emailOptionC(step: Int = 1): String {
     fun handleOptionC(): String {
         return when (currentState) {
             "whatsapp" -> whatsappOptionC()
-                "email" -> emailOptionC()
+            "email" -> emailOptionC()
             else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitamo imwe munyuguti zagaragajwe hejuru"
         }
     }
@@ -483,5 +670,11 @@ fun settingsGuide(step: Int = 1): String {
         else -> "Andika 1 kugira ngo utangire kwiga ku bijyanye na Settings kuva ku ntangiriro."
     }
 }
+
+
+
+
+
+
 
 
