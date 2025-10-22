@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
@@ -24,17 +25,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.draw.drawBehind
-
 import androidx.compose.ui.graphics.drawscope.DrawScope
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
         }
-
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme{
+            MaterialTheme {
                 ChatScreen()
             }
         }
@@ -49,115 +48,157 @@ fun ChatScreen() {
     var currentMessage by remember { mutableStateOf("") }
     val messages = remember { mutableStateListOf<String>() }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Menya Android",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+    ) {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
+
+        // Dynamic padding and text scaling based on screen size
+        val baseHorizontalPadding = screenWidth / 30 // Base scaling factor
+        val baseVerticalPadding = screenHeight / 75 // Base scaling factor
+        val horizontalPadding = baseHorizontalPadding.coerceAtLeast(8.dp).coerceAtMost(16.dp) // 8dp min, 16dp max
+        val verticalPadding = baseVerticalPadding.coerceAtLeast(7.dp).coerceAtMost(30.dp) // 7dp min, 30dp max
+        val baseTextSize = when {
+            screenWidth < 400.dp -> 16.sp // Small screens
+            screenWidth < 600.dp -> 20.sp // Medium screens
+            else -> 24.sp // Large screens
+        }
+
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = "Menya Android",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color(0xFF579CE6)
+                    )
+                )
+            },
+            bottomBar = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 0.dp, vertical = verticalPadding) // Removed horizontal padding
+                        .imePadding(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(4.dp)) // Added spacer for left space, matching right
+                    TextField(
+                        value = currentMessage,
+                        onValueChange = { currentMessage = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 48.dp) // Consistent minimum height
+                            .clip(RoundedCornerShape(24.dp)) // Rounded shape
+                            .background(Color.LightGray),
+                        placeholder = {
+                            Text(
+                                "Andika ubutumwa...",
+                                style = TextStyle(fontSize = baseTextSize)
+                            )
+                        },
+                        textStyle = TextStyle(fontSize = baseTextSize),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.LightGray,
+                            unfocusedContainerColor = Color.LightGray,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
                         )
                     )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF004225)
-                )
-            )
-        },
-        bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .imePadding(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextField(
-                    value = currentMessage,
-                    onValueChange = { currentMessage = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text(
-                        "Andika ubutumwa...",
-                        style = TextStyle(fontSize = 20.sp)
-                    ) },
-                    textStyle = TextStyle(fontSize = 20.sp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.LightGray,
-                        unfocusedContainerColor = Color.LightGray,
-                        focusedIndicatorColor = Color.Black,
-                        unfocusedIndicatorColor = Color.Black
-                    )
-
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        if (currentMessage.isNotBlank()) {
-                            messages.add("Wowe: $currentMessage")
-                            val response = generateResponse(currentMessage)
-                            messages.add("Ubufasha: $response")
-                            currentMessage = ""
-                            coroutineScope.launch {
-                                listState.scrollToItem(messages.lastIndex)
+                    Spacer(modifier = Modifier.width(4.dp)) // Space between TextField and Button
+                    Button(
+                        onClick = {
+                            if (currentMessage.isNotBlank()) {
+                                messages.add("Wowe: $currentMessage")
+                                val response = generateResponse(currentMessage)
+                                messages.add("Ubufasha: $response")
+                                currentMessage = ""
+                                coroutineScope.launch {
+                                    listState.scrollToItem(messages.lastIndex)
+                                }
                             }
+                        },
+                        modifier = Modifier
+                            .heightIn(min = 48.dp) // Match TextField height
+                            .clip(RoundedCornerShape(24.dp)) // Match TextField shape
+                            .widthIn(min = 80.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF579CE6),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Ohereza")
+                    }
+                    Spacer(modifier = Modifier.width(4.dp)) // Space at the right of Button, matching left
+                }
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            listState.scrollToItem(0)
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF004225),
-                        contentColor = Color.White
-                    )
+                    containerColor = Color(0xFF579CE6),
+                    contentColor = Color.White,
+                    shape = CircleShape
                 ) {
-                    Text("Ohereza")
+                    Text("⬆️")
                 }
             }
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    coroutineScope.launch {
-                        listState.scrollToItem(0)
-                    }
-                },
-                containerColor = Color(0xFF004225),
-                contentColor = Color.White,
-                shape = CircleShape
+        ) { innerPadding ->
+            LazyColumn(
+                state = listState,
+                reverseLayout = false,
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp)
             ) {
-                Text("⬆️")
-            }
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            state = listState,
-            reverseLayout = false,
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(horizontal = 8.dp)
-        ) {
-            items(messages) { msg ->
-                MessageBubble(
-                    message = msg,
-                    isUserMessage = msg.startsWith("Wowe:")
-                )
+                items(messages) { msg ->
+                    MessageBubble(
+                        message = msg,
+                        isUserMessage = msg.startsWith("Wowe:"),
+                        screenWidth = screenWidth
+                    )
+                }
             }
         }
     }
 }
+
 var currentState = ""
 var currentSection: String? = null
 var currentStep = 1
 
 @Composable
-fun MessageBubble(message: String, isUserMessage: Boolean) {
+fun MessageBubble(message: String, isUserMessage: Boolean, screenWidth: Dp) {
     val backgroundColor = if (isUserMessage) Color(0xFFD0E8FF) else Color(0xFFE0E0E0)
     val tailDirection = if (isUserMessage) 1f else -1f // Tail direction: right for user, left for app
-
+    val dynamicPadding = when {
+        screenWidth < 400.dp -> 4.dp // Small screens
+        screenWidth < 600.dp -> 9.dp // Medium screens
+        else -> 12.dp // Large screens
+    }
+    val textSize = when {
+        screenWidth < 400.dp -> 16.sp // Small screens
+        screenWidth < 600.dp -> 18.sp // Medium screens
+        else -> 20.sp // Large screens
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 8.dp),
+            .padding(vertical = dynamicPadding, horizontal = 8.dp),
         horizontalArrangement = if (isUserMessage) Arrangement.End else Arrangement.Start
     ) {
         Box(
@@ -176,20 +217,18 @@ fun MessageBubble(message: String, isUserMessage: Boolean) {
         ) {
             Text(
                 text = message.removePrefix(if (isUserMessage) "Wowe: " else "Ubufasha: "),
-                fontSize = 18.sp,
-                lineHeight = 24.sp,
+                fontSize = textSize,
+                lineHeight = textSize * 1.2f,
                 color = Color.Black
             )
         }
     }
 }
 
-
 private fun DrawScope.drawTail(direction: Float) {
     val tailWidth = 10f
     val tailHeight = 10f
     val offsetX = if (direction > 0) size.width - tailWidth else 0f
-
     val path = Path().apply {
         moveTo(offsetX, size.height)
         lineTo(offsetX + tailWidth * direction, size.height)
@@ -199,10 +238,8 @@ private fun DrawScope.drawTail(direction: Float) {
     drawPath(path, color = Color.Black)
 }
 
-
 fun generateResponse(input: String): String {
     val message = input.trim().lowercase()
-
     // Handle A, B, C inputs when in WhatsApp or Email menu
     if (currentState == "whatsapp" || currentState == "email") {
         when (message) {
@@ -211,7 +248,6 @@ fun generateResponse(input: String): String {
             "c" -> return handleOptionC()
         }
     }
-
     // Direct access for settings-related keywords
     if (message.contains("urumuri") || message.contains("screen") || message.contains("display")) {
         currentState = "settings"
@@ -238,10 +274,8 @@ fun generateResponse(input: String): String {
         currentStep = 6
         return settingsGuide(currentStep)
     }
-
     // Direct access for WhatsApp-related keywords
-    if (message.contains("whatsapp") || message.contains("watsap") ||
-        message.contains("watsapu") || message.contains("wasapu") || message.contains("wasap")) {
+    if (message.contains("whatsapp") || message.contains("watsap") || message.contains("watsapu") || message.contains("wasapu") || message.contains("wasap")) {
         currentState = "whatsapp"
         currentStep = 0
         return when {
@@ -253,10 +287,8 @@ fun generateResponse(input: String): String {
             else -> whatsappMenu()
         }
     }
-
     // Direct access for email-related keywords
-    if (message.contains("email") || message.contains("gmail") ||
-        message.contains("imeyili") || message.contains("imeli") || message.contains("imeri")) {
+    if (message.contains("email") || message.contains("gmail") || message.contains("imeyili") || message.contains("imeli") || message.contains("imeri")) {
         currentState = "email"
         currentStep = 0
         return when {
@@ -266,12 +298,10 @@ fun generateResponse(input: String): String {
             else -> emailMenu()
         }
     }
-
     // Main logic for other inputs
     return when {
         // Settings menu
-        message.contains("setingi") || message.contains("igenamiterere") ||
-                message.contains("setting") || message.contains("settingi") -> {
+        message.contains("setingi") || message.contains("igenamiterere") || message.contains("setting") || message.contains("settingi") -> {
             currentState = "settings"
             currentStep = 1
             settingsGuide()
@@ -316,165 +346,37 @@ fun generateResponse(input: String): String {
     }
 }
 
-//fun generateResponse(input: String): String {
-//    val message = input.lowercase().trim()
-//
-//    // ✅ First: Handle A/B/C inputs if the user is in a menu
-//    if (currentState == "whatsapp" || currentState == "email") {
-//        return when (message.uppercase()) {
-//            "A" -> handleOptionA()
-//            "B" -> handleOptionB()
-//            "C" -> handleOptionC()
-//            else -> null // if not A/B/C, continue with normal checks
-//        } ?: "Sinkumva neza. Hitamo A, B cyangwa C."
-//    }
-//
-//    // Direct access kuri whatsapp
-//    if (message.contains("urumuri") || message.contains("screen") || message.contains("display")) {
-//        currentState = "settings"
-//        currentStep = 4
-//        return settingsGuide(currentStep)
-//    }
-//    if (message.contains("wifi")) {
-//        currentState = "settings"
-//        currentStep = 2
-//        return settingsGuide(currentStep)
-//    }
-//    if (message.contains("bluetooth") || message.contains("bulutufu")) {
-//        currentState = "settings"
-//        currentStep = 3
-//        return settingsGuide(currentStep)
-//    }
-//    if (message.contains("amajwi") || message.contains("sound")) {
-//        currentState = "settings"
-//        currentStep = 5
-//        return settingsGuide(currentStep)
-//    }
-//    if (message.contains("sekirite") || message.contains("umutekano") || message.contains("security")) {
-//        currentState = "settings"
-//        currentStep = 6
-//        return settingsGuide(currentStep)
-//    }
-//
-//    // Direct access kuri whatsapp
-//    if (message.contains("whatsapp") || message.contains("watsap") ||
-//        message.contains("watsapu") || message.contains("wasapu") || message.contains("wasap")) {
-//
-//        // Direct access to typed words
-//        return when {
-//            message.contains("gushyiraho") || message.contains("install") -> whatsappOptionA()
-//            message.contains("kwiyandikisha") || message.contains("register") -> whatsappOptionB()
-//            message.contains("ubutumwa") -> whatsappOptionC(1)
-//            message.contains("amafoto") || message.contains("videwo") || message.contains("inyandiko") -> whatsappOptionC(2)
-//            message.contains("guhamagara") || message.contains("gurupe") || message.contains("sitati") -> whatsappOptionC(3)
-//            else -> whatsappMenu()
-//        }
-//    }
-//
-//    // direct access to imeri
-//    if (message.contains("email") || message.contains("gmail") ||
-//        message.contains("imeyili") || message.contains("imeli") || message.contains("imeri")) {
-//
-//        return when {
-//            message.contains("gufungura") || message.contains("kwiyandikisha") || message.contains("create account") -> emailOptionA()
-//            message.contains("kwinjira") || message.contains("login") -> emailOptionB()
-//            message.contains("koherereza") || message.contains("email nshya") || message.contains("message") || message.contains("ubutumwa") -> emailOptionC(2)
-//            else -> emailMenu()
-//        }
-//    }
-//
-//    if (currentState == "whatsapp" || currentState == "email") {
-//        return when (message.uppercase()) {
-//            "A" -> handleOptionA()
-//            "B" -> handleOptionB()
-//            "C" -> handleOptionC()
-//            else -> "sinkumva neza. Hitamo A, B cyangwa C."
-//        }
-//    }
-//    // whole logic here
-//    return when {
-//        // setingi menu
-//        message.contains("setingi") || message.contains("igenamiterere") ||
-//                message.contains("setting") || message.contains("settingi") -> {
-//            currentState = "settings"
-//            currentStep = 0
-//            settingsGuide()
-//        }
-//
-//        // menu ya whatsapp
-//        message == "whatsapp" -> {
-//            currentState = "whatsapp"
-//            currentStep = 0
-//            whatsappMenu()
-//        }
-//
-//        // ✅ Email main menu (if user just says Email)
-//        message == "email" -> {
-//            currentState = "email"
-//            currentStep = 0
-//            emailMenu()
-//        }
-//
-//
-//        // komeza steps
-//        message.contains("komeza") -> {
-//            when (currentState) {
-//                "whatsapp" -> {
-//                    if (currentStep < 3) {
-//                        currentStep++
-//                        whatsappOptionC(currentStep)
-//                    } else "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri WhatsApp!"
-//                }
-//                "email" -> {
-//                    if (currentStep < 3) {
-//                        currentStep++
-//                        emailOptionC(currentStep)
-//                    } else "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Email!"
-//                }
-//                "settings" -> {
-//                    if (currentStep < 8) {
-//                        currentStep++
-//                        settingsGuide(currentStep)
-//                    } else "Ubwo nibwo buryo bw'ingenzi ukeneye kumenya kuri Settings!"
-//                }
-//                else -> "Banza uhitemo serivisi ushaka gufashwamo (urugero: WhatsApp, Email, Settings...)"
-//            }
-//        }
-//        else -> "Sinkumva neza. Ushobora kubaza ibijyanye na Watsapu, imeri, cyangwa Settings."
-//    }
-//
-//}
- fun whatsappMenu(): String {
-        return "Ukeneye ubufasha kuri watsapu(WhatsApp). Hitamo: inyuguti y'ubufasha ukeneye muri izi zikurikira\n" +
-                "A: Gushyiraho watsapu(WhatsApp)\n" +
-                "B: Kwiyandikisha kuri WhatsApp\n" +
-                "C: Uko WhatsApp ikoreshwa"
-    }
+fun whatsappMenu(): String {
+    return "Ukeneye ubufasha kuri watsapu(WhatsApp). Hitamo: inyuguti y'ubufasha ukeneye muri izi zikurikira\n" +
+            "A: Gushyiraho watsapu(WhatsApp)\n" +
+            "B: Kwiyandikisha kuri WhatsApp\n" +
+            "C: Uko WhatsApp ikoreshwa"
+}
 
-    fun whatsappOptionA(): String {
-        return "Kugira ngo ushyire watsapu(WhatsApp) muri telefoni bwa mbere:\n" +
-                "1.Jyamurutonde rwa porogaramu zawe \n" +
-                "2.Fungura iyanditseho\"Play Store\"  .\n" +
-                "3.kanda hasi ahanditse ijambo \"search\" urabona aho kwandika hejuru wandikemo ijambo \"WhatsApp\".\n" +
-                "4.Kanda  ahanditse \"Install\".\n" +
-                "5.Tegereza ko irangiza insitarasiyo cyangwa kujya muri telefoni yawe, hanyuma kanda \"Open\".\n\n"+
+fun whatsappOptionA(): String {
+    return "Kugira ngo ushyire watsapu(WhatsApp) muri telefoni bwa mbere:\n" +
+            "1.Jyamurutonde rwa porogaramu zawe \n" +
+            "2.Fungura iyanditseho\"Play Store\" .\n" +
+            "3.kanda hasi ahanditse ijambo \"search\" urabona aho kwandika hejuru wandikemo ijambo \"WhatsApp\".\n" +
+            "4.Kanda ahanditse \"Install\".\n" +
+            "5.Tegereza ko irangiza insitarasiyo cyangwa kujya muri telefoni yawe, hanyuma kanda \"Open\".\n\n" +
+            "💡 Ukeneye internet (data) kugirango ubikore neza.\n\n" +
+            "Ushaka gukomeza kwiyandikisha? Andika B"
+}
 
-                "💡 Ukeneye internet (data) kugirango ubikore neza.\n\n"+
-                "Ushaka gukomeza kwiyandikisha? Andika B"
+fun whatsappOptionB(): String {
+    return "Kwiyandikisha kuri watsapu(WhatsApp):\n" +
+            "1.Emera amategeko ya WhatsApp (kanda ahanditse\"Agree and Continue\").\n" +
+            "2.Hitamo igihugu urugero:(Rwanda +250),Andika numero yawe ya telefoni ushaka gukoresha kuri WhatsApp (nka: 78xxxxxxx).\n" +
+            "3.Emeza ko ari yo (kanda OK).\n" +
+            "4.Andika code yo kwemeza (izakwohererezwa mu butumwa bugufi SMS).\n" +
+            "Iyo code uyandika aho igusaba kuyishyira.\n" +
+            "5.Shyiramo Izina ryawe n’Ifoto,Uzasabwa kwandika izina ushaka ko abandi babona kuri WhatsApp" +
+            "\n" +
+            "6.Ushobora no guhitamo ifoto ukoresheje **camera** cyangwa **gallery**, Kanda \"Next\"\n\n" +
+            "Ushaka kumenya uko ikoreshwa? (kohereza ubutumwa, guhamagara...) cyangwa ibindi? Andika C"
+}
 
-
-    }
-
-    fun whatsappOptionB(): String {
-        return "Kwiyandikisha kuri watsapu(WhatsApp):\n" +
-                "1.Emera amategeko ya WhatsApp (kanda ahanditse\"Agree and Continue\").\n" +
-                "2.Hitamo igihugu urugero:(Rwanda +250),Andika numero yawe ya telefoni ushaka gukoresha kuri WhatsApp (nka: 78xxxxxxx).\n" +
-                "3.Emeza ko ari yo (kanda OK).\n" +
-                "4.Andika code yo kwemeza (izakwohererezwa mu butumwa bugufi SMS).\n" + "Iyo code uyandika aho igusaba kuyishyira.\n" +
-                "5.Shyiramo Izina ryawe n’Ifoto,Uzasabwa kwandika izina ushaka ko abandi babona kuri WhatsApp" + "\n" +
-                "6.Ushobora no guhitamo ifoto ukoresheje **camera** cyangwa **gallery**, Kanda \"Next\"\n\n"+
-                "Ushaka kumenya uko ikoreshwa? (kohereza ubutumwa, guhamagara...) cyangwa ibindi? Andika C"
-    }
 fun whatsappOptionC(step: Int = 1): String {
     return when (step) {
         1 -> "Uko WhatsApp ikoreshwa :\n" +
@@ -484,7 +386,6 @@ fun whatsappOptionC(step: Int = 1): String {
                 "- Hitamo izina ry'umuntu ushaka kwandikira\n" +
                 "- Andika ubutumwa hanyuma ukande ku kimenyetso cy’icyatsi cyangwa umweru kugirango bwoherezwe\n\n" +
                 "Andika 'komeza' kugirango ubone uko wakohereza Amafoto,inyandiko n'ibindi"
-
         2 -> "Uko WhatsApp ikoreshwa:\n" +
                 "2. Kohereza amafoto, video cyangwa inyandiko:\n" +
                 "- Kanda ku kimenyetso cya 'Clip' cyangwa 'Attach'📎\n" +
@@ -495,16 +396,15 @@ fun whatsappOptionC(step: Int = 1): String {
                 "- Kanda kandi ufate ikimenyetso cya Microphone🎙️\n" +
                 "- Vuga ubutumwa bwawe, hanyuma urekure kugirango bwoherezwe\n\n" +
                 "Andika 'komeza' kugirango ukomeze ku gice cya nyuma cyuburyo wakoreshamo watsapu"
-
         3 -> "Uko WhatsApp ikoreshwa:\n" +
                 "4. Guhamagara abantu:\n" +
-                "- Kanda Telephone 📞 cyangwa kamera🎥 mu kiganiro cya watsapu\n\n"+
+                "- Kanda Telephone 📞 cyangwa kamera🎥 mu kiganiro cya watsapu\n\n" +
                 "5. Gukoresha Status:\n" +
                 "- Kanda Status hejuru, uhitemo kamera📷 cyangwa kereyo✏️ kugirango ushyireho inkuru\n\n" +
                 "6. Kureba no gusiba ubutumwa:\n" +
                 "- Kanda igihe gito ku butumwa ushaka gusiba\n" +
-                "- Hitamo 'Delete for me' kugirango ubutumwa ubusibe muruganiriro rwawe  cyangwa 'Delete for everyone' ubusibe kumpande zombi,haba wowe nuwo waruhaye ubutumwa\n\n" +
-                "7. Kuganira mu itsinda:\n" +
+                "- Hitamo 'Delete for me' kugirango ubutumwa ubusibe muruganiriro rwawe cyangwa 'Delete for everyone' ubusibe kumpande zombi,haba wowe nuwo waruhaye ubutumwa\n\n" +
+                "7. Kaganira mu itsinda:\n" +
                 "- Kanda ku + hasi iburyo, uhitemo 'New Group'\n" +
                 "- Hitamo abantu, shyiramo izina ry’itsinda hanyuma kanda ikimenyetso cy’icyatsi/umweru\n\n" +
                 "Ibi nibyo by’ingenzi kuri WhatsApp!"
@@ -518,6 +418,7 @@ fun emailMenu(): String {
             "B: Kwinjira muri imeri(Gmail)\n" +
             "C: Kohereza no kwakira imeri(email)"
 }
+
 fun emailOptionA(): String {
     return "Uko washyiraho konti ya imeri(Gmail) nshya muri telefoni yawe:\n\n" +
             "1. Fungura **Settings(Igenamiterere)** kuri telefoni yawe.\n" +
@@ -529,10 +430,10 @@ fun emailOptionA(): String {
             "7. Hitamo izina rya email (urugero: izinaryawe@gmail.com) hanyuma kanda **Next**.\n" +
             "8. Shyiramo Password nshya kandi wemeze, hanyuma kanda **Next**.\n" +
             "9. Emera amabwiriza ya Google, hanyuma konti ya Gmail iba yashyizweho.\n\n" +
-            "Ubu ushobora gukoresha iyi konti kuri Gmail, YouTube, na Play Store.\n\n"+
+            "Ubu ushobora gukoresha iyi konti kuri Gmail, YouTube, na Play Store.\n\n" +
             "urashaka kumenya uko wakwinjira muri Gmail yawe cyangwa muri konti yawe nshya? andika B"
-
 }
+
 fun emailOptionB(): String {
     return "Uko winjira muri Gmail cyangwa wongeramo konti nshya:\n\n" +
             "1. Fungura porogaramu ya **Gmail** muri telefoni yawe.\n" +
@@ -550,46 +451,45 @@ fun emailOptionC(step: Int = 1): String {
                 "2. Urahita ubona aho handitse **Inbox** harimo Emails zakohererejwe.\n" +
                 "3. Kanda kuri Email ushaka gusoma kugira ngo uyifungure.\n\n" +
                 "Andika 'komeza' kugira ngo ubone uko wohereza Email nshya."
-
         2 -> "Uko wohereza Email nshya:\n\n" +
                 "1. Fungura porogaramu ya **Gmail**.\n" +
                 "2. Kanda ku kimenyetso cya **agakereyo✏️** cyangwa ahanditse **Compose** (hasi iburyo).\n" +
                 "3. Mu gasanduku ka **To**, andika Email y’uwo ushaka koherereza urugero: umuntu@gmail.com\n" +
                 "4. Ahanditse **Subject**, andika umutwe cyangwa impamvu y’iyo Email.\n\n" +
                 "Andika 'komeza' kugira ngo ubone uko urangiza ubutumwa bwawe no kubwohereza."
-
         3 -> "Uko urangiza kohereza Email:\n\n" +
                 "5. Mu gasanduku kanini hasi, andika ubutumwa bwawe.\n" +
                 "6. Niba ushaka kongeraho ifoto cyangwa inyandiko, kanda kuri **Clip/Attach**📎.\n" +
                 "7. Ohereza Ukanda **Send** kugira ngo Email yawe igende.\n\n" +
                 "Ubu ushobora kohereza no kwakira mesagje za Email neza muri telefoni yawe!"
-
         else -> "Andika 1 kugira ngo utangire kwiga uko Email ikoreshwa kuva ku ntangiriro."
     }
 }
-    fun handleOptionA(): String {
-        return when (currentState) {
-            "whatsapp" -> whatsappOptionA()
-            "email" -> emailOptionA()
-            else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitamo imwe munyuguti zagaragajwe hejuru"
-        }
-    }
 
-    fun handleOptionB(): String {
-        return when (currentState) {
-            "whatsapp" -> whatsappOptionB()
-            "email" -> emailOptionB()
-            else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitamo imwe munyuguti zagaragajwe hejuru"
-        }
+fun handleOptionA(): String {
+    return when (currentState) {
+        "whatsapp" -> whatsappOptionA()
+        "email" -> emailOptionA()
+        else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitamo imwe munyuguti zagaragajwe hejuru"
     }
+}
 
-    fun handleOptionC(): String {
-        return when (currentState) {
-            "whatsapp" -> whatsappOptionC()
-            "email" -> emailOptionC()
-            else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitamo imwe munyuguti zagaragajwe hejuru"
-        }
+fun handleOptionB(): String {
+    return when (currentState) {
+        "whatsapp" -> whatsappOptionB()
+        "email" -> emailOptionB()
+        else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitamo imwe munyuguti zagaragajwe hejuru"
     }
+}
+
+fun handleOptionC(): String {
+    return when (currentState) {
+        "whatsapp" -> whatsappOptionC()
+        "email" -> emailOptionC()
+        else -> "sinkumva neza. Andika ijambo risobanutse cyangwa uhitamo imwe munyuguti zagaragajwe hejuru"
+    }
+}
+
 fun settingsGuide(step: Int = 1): String {
     return when (step) {
         // Intangiriro
@@ -641,40 +541,26 @@ fun settingsGuide(step: Int = 1): String {
                 "Andika 'komeza' kugira ngo ukomeze ku gice cya nyuma."
         // igice cyanyuma
         7 -> "🔹 Igenamiterere ryisumbuye (Advanced Settings):\n\n" +
-
                 "**Apps (Porogaramu):**\n" +
                 "- Kanda kuri **Apps** cyangwa **Applications**.\n" +
                 "- Urabona urutonde rwa porogaramu zose ziri muri telefoni yawe.\n" +
                 "- Ushobora gukanda ku izina rya application kugira ngo urebe amahitamo.\n" +
                 "- Hari ahanditse **Uninstall** (gusiba burundu) niba porogaramu utayikeneye.\n" +
                 "- Hari kandi **Force Stop** (Guhagarika by’igihe gito) iyo porogaramu yagize ikibazo cyangwa iri kurondereza umuriro wa bateri.\n\n" +
-
                 "**Storage (Ububiko):**\n" +
                 "- Kanda kuri **Storage**(Ububiko).\n" +
                 "- Hano urabona uburyo ububiko bwa telefoni bukoreshwa (amafoto, videwo, porogaramu, inyandiko n’ibindi).\n" +
                 "- Ushobora gusiba amafoto, videwo cyangwa porogaramu zidafite akamaro kugira ngo ubone umwanya cyangwa ububiko.\n\n" +
-
                 "**Battery (Bateri):**\n" +
                 "- Kanda kuri **Battery**.\n" +
                 "- Urahita ubona uko umuriro wa bateri ukoreshwa na porogaramu ikoresha umuriro cyane.\n" +
                 "- Ushobora guhitamo **Battery Saver** kugira ngo umuriro wa bateri urambe igihe kinini, cyane cyane iyo umuriro uri hafi gushira.\n\n" +
-
                 "**System Update (Kuvugurura):**\n" +
                 "- Kanda kuri **System Update** cyangwa **Software Update**.\n" +
                 "- Telefoni izasuzuma niba hari version nshya ya Android iboneka.\n" +
                 "- Niba ibonetse, kanda **Download and Install**.\n" +
                 "- Kuvugurura Android bituma telefoni ikora neza, ikagira umutekano mwinshi kandi ikabona uburyo bushya.\n\n" +
-
                 "Noneho wamenye uburyo bwo gukoresha neza igenamiterere (Settings) mu buryo bwuzuye!"
-
         else -> "Andika 1 kugira ngo utangire kwiga ku bijyanye na Settings kuva ku ntangiriro."
     }
 }
-
-
-
-
-
-
-
-

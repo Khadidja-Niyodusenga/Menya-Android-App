@@ -20,6 +20,7 @@ android {
 
     buildTypes {
         release {
+
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -37,6 +38,7 @@ android {
     buildFeatures {
         compose = true
     }
+
 
 }
 
@@ -56,7 +58,8 @@ dependencies {
         implementation ("androidx.compose.foundation:foundation:1.5.0") // or your Compose version
         implementation ("androidx.compose.material3:material3:1.3.0")
         implementation ("androidx.compose.ui:ui:1.7.0")
-
+        implementation ("androidx.compose.material3:material3:1.3.0")
+        implementation ("androidx.compose.foundation:foundation:1.7.0")
 
 
         testImplementation("junit:junit:4.13.2")
